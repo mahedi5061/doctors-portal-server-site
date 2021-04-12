@@ -24,6 +24,7 @@ app.get('/', (req, res) => {
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
   const appointmentCollection = client.db("doctorsPortal").collection("doctorsBookingInfo");
+  const doctorCollection = client.db("doctorsPortal").collection("doctorscollection");
   app.post('/addAppointment',(req, res)=>{
       const appointment = req.body;
       console.log(appointment)
@@ -32,7 +33,30 @@ client.connect(err => {
         res.send(result.insertedCount)
       })
   })
-   
+
+  app.post('/appointmentsByDate', (req, res) => {
+    const date = req.body;
+    const email = req.body.email;
+    doctorCollection.find({ email: email })
+        .toArray((err, doctors) => {
+            const filter = { date: date.date }
+            if (doctors.length === 0) {
+                filter.email = email;
+            }
+            appointmentCollection.find(filter)
+                .toArray((err, documents) => {
+                    console.log(email, date.date, doctors, documents)
+                    res.send(documents);
+                })
+        })
+
+//   app.get('/appointments', (req, res) => {
+//     appointmentCollection.find({})
+//         .toArray((err, documents) => {
+//             res.send(documents);
+//         })
+// })
+})
 });
 
 app.listen(port, () => {
